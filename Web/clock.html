@@ -1,0 +1,257 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" id="sixapart-standard">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Webkit transform test</title>
+<style>
+
+#clock
+{
+	width: 119px;
+	height: 119px;
+	border: 1px solid black;
+	position: absolute;
+	
+	padding: 0px;
+	margin: 0px;
+	
+	background-color: black;
+}
+
+#clock-center
+{
+	-webkit-border-radius: 7px;
+	width: 11px;
+	height: 11px;
+	position: absolute;
+	
+	left: 52px;
+	top: 52px;
+	
+	background-color: black;
+	border: 2px solid white;
+	// padding: 10px;
+}
+
+#seconds-hand
+{
+	width: 1px;
+	height: 12px;
+	position: absolute;
+	
+	left: 59px;
+	top: 20px;
+	
+	width: 1px;
+	height: 40px;
+	
+	background-color: white;
+	
+	-webkit-transform-origin: 1px 40px;
+    -webkit-transition: -webkit-transform 0.5s ease-in;
+}
+
+#minutes-hand
+{
+	width: 2px;
+	height: 12px;
+	position: absolute;
+	
+	left: 59px;
+	top: 20px;
+	
+	width: 2px;
+	height: 40px;
+	
+	background-color: white;
+	
+	-webkit-transform-origin: 1px 40px;
+    -webkit-transition: -webkit-transform 0.5s ease-in;
+}
+
+#hours-hand
+{
+	width: 2px;
+	height: 12px;
+	position: absolute;
+	
+	left: 58px;
+	top: 34px;
+	
+	width: 3px;
+	height: 26px;
+	
+	background-color: white;
+	
+	-webkit-transform-origin: 2px 26px;
+    -webkit-transition: -webkit-transform 0.5s ease-in;
+}
+
+.digit
+{
+	position: absolute;
+	
+	width: 4px;
+	height: 12px;
+	background-color: white;
+	
+	left: 58px;
+	top: 20px;
+	
+	-webkit-transform-origin: 2px 40px;
+}
+
+.thickdigit
+{
+	position: absolute;
+	
+	width: 9px;
+	height: 12px;
+	background-color: black;
+	
+	left: 55px;
+	top: 20px;
+	
+	-webkit-transform-origin: 5px 40px;
+}
+
+.thickdigit .dig1
+{
+	position: absolute;
+	
+	width: 4px;
+	height: 12px;
+	background-color: white;
+	
+	left: 0px;
+	top: 0px;
+}
+
+.thickdigit .dig2
+{
+	position: absolute;
+	
+	width: 4px;
+	height: 12px;
+	background-color: white;
+	
+	left: 5px;
+	top: 0px;
+}
+
+</style>
+
+<script type="text/javascript">
+
+var prev_minute = 0;
+var prev_second = 0;
+var prev_hour = 0;
+
+var cur_minute = 0;
+var cur_second = 0;
+var cur_hour = 0;
+
+function start_clock()
+{
+	prev_hour = 0;
+	prev_minute = 0;
+	prev_second = 0;
+	cur_hour = 0;
+	cur_minute = 0;
+	cur_second = 0;
+	
+	window.setTimeout(update_clock, 1000);
+}
+
+function update_clock()
+{
+	// Grab elements
+	var hour_hand = document.getElementById('hours-hand');
+	var minute_hand = document.getElementById('minutes-hand');
+	var second_hand = document.getElementById('seconds-hand');
+	
+	// Grab time
+	var cur_date = new Date();
+	var hour = cur_date.getHours();
+	hour = hour > 12 ? hour-12 : hour;
+	var minute = cur_date.getMinutes();
+	var second = cur_date.getSeconds();
+	
+	// Add delta time
+	var delta = hour - prev_hour;
+	cur_hour += (delta < 0) ? hour-(prev_hour-12) : delta;
+	delta = minute - prev_minute;
+	cur_minute += (delta < 0) ? minute-(prev_minute-60) : delta;
+	delta = second - prev_second;
+	cur_second += (delta < 0) ? second-(prev_second-60) : delta;
+	
+	// Set time
+	hour_hand.style.webkitTransform = 'rotate(' + Math.round(30 * cur_hour) + 'deg)';
+	minute_hand.style.webkitTransform = 'rotate(' + Math.round(6 * cur_minute) + 'deg)';
+	second_hand.style.webkitTransform = 'rotate(' + Math.round(6 * cur_second) + 'deg)';
+	
+	// Set previous
+	prev_hour = hour;
+	prev_minute = minute;
+	prev_second = second;
+	
+	window.setTimeout(update_clock, 1000);
+}
+
+start_clock();
+</script>
+
+</head>
+<body>
+ 
+<div id="clock">
+	<!-- back face -->
+	
+	<div class="digit" id="d01_1" style="-webkit-transform: rotate(30deg);"></div>
+	<div class="digit" id="d01_2" style="-webkit-transform: rotate(30deg);"></div>
+	
+	<div class="digit" id="d02_1" style="-webkit-transform: rotate(60deg);"></div>
+	<div class="digit" id="d02_2" style="-webkit-transform: rotate(60deg);"></div>
+	
+	<div class="thickdigit" id="d03_1" style="-webkit-transform: rotate(90deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	<div class="thickdigit" id="d03_2" style="-webkit-transform: rotate(90deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	
+	<div class="digit" id="d04_1" style="-webkit-transform: rotate(120deg);"></div>
+	<div class="digit" id="d04_2" style="-webkit-transform: rotate(120deg);"></div>
+	
+	<div class="digit" id="d05_1" style="-webkit-transform: rotate(150deg);"></div>
+	<div class="digit" id="d05_2" style="-webkit-transform: rotate(150deg);"></div>
+	
+	<div class="thickdigit" id="d06_1" style="-webkit-transform: rotate(180deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	<div class="thickdigit" id="d06_2" style="-webkit-transform: rotate(180deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	
+	<div class="digit" id="d07_1" style="-webkit-transform: rotate(210deg);"></div>
+	<div class="digit" id="d07_2" style="-webkit-transform: rotate(210deg);"></div>
+	
+	<div class="digit" id="d08_1" style="-webkit-transform: rotate(240deg);"></div>
+	<div class="digit" id="d08_2" style="-webkit-transform: rotate(240deg);"></div>
+	
+	<div class="thickdigit" id="d09_1" style="-webkit-transform: rotate(270deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	<div class="thickdigit" id="d09_2" style="-webkit-transform: rotate(270deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	
+	<div class="digit" id="d10_1" style="-webkit-transform: rotate(300deg);"></div>
+	<div class="digit" id="d10_2" style="-webkit-transform: rotate(300deg);"></div>
+	
+	<div class="digit" id="d11_1" style="-webkit-transform: rotate(330deg);"></div>
+	<div class="digit" id="d11_2" style="-webkit-transform: rotate(330deg);"></div>
+	
+	<div class="thickdigit" id="d12_1" style="-webkit-transform: rotate(0deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	<div class="thickdigit" id="d12_2" style="-webkit-transform: rotate(0deg);"><div class="dig1"></div><div class="dig2"></div></div>
+	
+	
+	<!-- moving parts -->
+	
+	<div id="seconds-hand"></div>
+	<div id="minutes-hand"></div>
+	<div id="hours-hand"></div>
+	<div id="clock-center"></div>
+</div>
+
+</body>
+</html>
