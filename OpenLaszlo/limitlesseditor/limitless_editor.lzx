@@ -1,0 +1,487 @@
+<canvas>
+  <!-- Limitless Editor 
+       Copyright (C) 2007 James S Urquhart (jamesu at gmail.com)
+       Based on code from Limitless Quest by Andrew Wooldridge
+  -->
+  
+  <!-- Requirements:
+     - Images go in the "resources" folder
+     - json.js comes from http://osteele.com/sources/openlaszlo/json/
+     - Everything goes in the "limitlesseditor" folder
+  -->
+  
+  <!-- Bugs:
+     - OpenLaszlo's mouseover event doesn't fire when the mouse is pressed, so you cuurrently
+       have to keep clicking the mouse to paint a batch of tiles.
+     - There is lots of room for improvement especially when binding the tilemap data.
+  -->
+  
+  <script src="json.js"/>
+  
+  <!-- Images -->
+  
+  <resource name="tileset_img" src="resources/dg_dungeon32.png"/> 
+   
+  <!-- Tileset (dungeon) -->
+  
+  <dataset name="tileset">
+    <tile>
+      <name>firstTile</name>
+      <offset x="32" y="64"/>
+    </tile>
+    <tile>
+      <name>secondTile</name>
+      <offset x="0" y="0"/>
+    </tile>
+    <tile>
+      <name>thirdTile</name>
+      <offset x="32" y="32"/>
+    </tile>
+    <tile>
+      <name>wall</name>
+      <offset x="0" y="128"/>
+    </tile>
+    <tile>
+      <name>wall 2</name>
+      <offset x="0" y="128"/>
+      <props collision="true"/>
+    </tile>
+    <tile>
+      <name>floor</name>
+      <offset x="0" y="0"/>
+      <props collision="false"/>
+    </tile>
+    <tile>
+      <name>floor 2</name>
+      <offset x="32" y="0"/>
+      <props collision="false"/>
+      <action type="gotomap">
+        <map>1</map>
+        <player x="8" y="1"/> 
+      </action>
+    </tile>
+    <tile>
+      <name>floor 3</name>
+      <offset x="32" y="0"/>
+      <props collision="false"/>
+      <action type="gotomap">
+        <map>0</map>
+        <player x="1" y="1"/> 
+      </action>
+    </tile>
+    <tile>
+      <name>floor 4</name>
+      <offset x="64" y="0"/>
+      <props collision="false"/>
+      <action type="message">
+        <value>a trap!</value>
+      </action>
+    </tile>
+  </dataset>
+  
+  <!-- Map data (tilemap) -->
+  
+  <dataset name="mapdata">
+    <meta>
+      <extent x="10" y="10"/>
+      <tileset base="dungeon"/>
+    </meta>
+    <object>
+    </object>
+    <tilemap>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+      <t>2</t>
+    </tilemap>
+    
+  </dataset>
+  
+  <!-- editmanager for editing utils -->
+  
+  <class name="editmanager">
+    <attribute name="brush" value="1"/>
+    <attribute name="brush_active" value="0"/>
+    <datapointer id="mydp" xpath="tileset:/tiles[0]/offset/@x" rerunxpath="false"/>
+    
+    <method name="get_tileoffset" args="tile">
+<![CDATA[
+      return {x: mydp.xpathQuery('tileset:/tile['+ tile +']/offset/@x'), 
+              y: mydp.xpathQuery('tileset:/tile['+ tile +']/offset/@y')};
+]]>
+    </method>
+    
+    <method name="dump_js">
+<![CDATA[
+      var tile_idx = 1;
+      var build_str = "";
+      build_str += "/*\n *\n * @author sosumi\n*/\n";
+      
+      var pointer = canvas.datasets.tileset.getPointer();
+      
+      // Dump tileset
+      if (pointer.selectChild())
+      {
+	      do
+	      {
+	      	var build_node_data = {name: '', xOff: 0, yOff: 0, collision: false, base: 'dungeon'}
+	      	var build_node_actions = [];
+	      	
+	      	if (pointer.getNodeName() != 'tile')
+	      	   continue;
+      	
+      		if (pointer.selectChild())
+      		{
+	      		do
+	      		{
+	      			if (pointer.getNodeName() == 'name')
+	      			{
+	      				build_node_data.name = pointer.getNodeText();
+	      			}
+	      			else if (pointer.getNodeName() == 'offset')
+	      			{
+	      				build_node_data.xOff = parseInt(pointer.getNodeAttribute('x'));
+	      				build_node_data.yOff = parseInt(pointer.getNodeAttribute('y'));
+	      			}
+	      			else if (pointer.getNodeName() == 'props')
+	      			{
+	      				build_node_data.collision = pointer.getNodeAttribute('collision') == 'true' ? true : false;
+	      			}
+	      			else if (pointer.getNodeName() == 'action')
+	      			{
+	      				var action_type = pointer.getNodeAttribute('type');
+	      				
+	      				// One more sublevel
+	      				if (pointer.selectChild())
+	      				{
+	      					var action_build = {type : action_type};
+	      					var action_build_params = {};
+	      					
+		      				do 
+		      				{
+		      					if (pointer.getNodeName() == 'map')
+		      					{
+		      						action_build_params.map = parseInt(pointer.getNodeText());
+		      					}
+		      					else if (pointer.getNodeName() == 'player')
+		      					{
+		      						action_build_params.player = { 'pos' : { 
+		      							                           x: parseInt(pointer.getNodeAttribute('x')), 
+		      							                           y: parseInt(pointer.getNodeAttribute('y')) 
+		      							                         } }
+		      					}
+		      					else if (pointer.getNodeName() == 'value')
+		      					{
+		      						action_build_params = pointer.getNodeText();
+		      					}
+		      				} while (pointer.selectNext())
+		      				
+		      				action_build.value = action_build_params;
+		      				build_node_actions.push(action_build);
+		      				
+		      				pointer.selectParent();
+	      				}
+	      			}
+	      		} while (pointer.selectNext())
+	      		
+	      		pointer.selectParent();
+      		}
+      		
+	      	// Now dump it
+	      	
+	      	if (build_node_actions.length > 0)
+	      	  build_node_data.action = build_node_actions[0];
+	      	
+	      	build_str += 'var t' + tile_idx + ' = YAHOO.alw.llq.makeTile(' + JSON.stringify(build_node_data) + ');\n';
+	      	
+	      	tile_idx += 1;
+	      } while (pointer.selectNext())
+      }
+      
+      // Dump monsters
+      build_str += '\nmonsterData = [\n[]]\n\n';
+      
+      // Finally, Dump world data
+      pointer = canvas.datasets.mapdata.getPointer();
+      if (pointer.selectChild())
+      {    
+         do
+         {
+         	// for now we'll just parse tiles & assume its 10x10
+         	if (pointer.getNodeName() == 'tilemap')
+         	{
+         		// Tiles!
+         		var tile_row = [0,0,0,0,0,0,0,0,0,0];
+         		var tile_column = -1;
+         		
+         		build_str += 'worldData = [\n[\n';
+         		
+         		if (pointer.selectChild())
+         		{
+         			do
+         			{
+         				if (tile_column < 0)
+         				  tile_column = 0;
+         				else if (tile_column == 0)
+         				  build_str += ',\n';
+         				
+	         			tile_row[tile_column] = parseInt(pointer.getNodeText());
+	         			
+	         			if (tile_column == 9)
+	         			{
+	         				build_str += '[t' +
+	         				   tile_row[0] + ',t' +
+	         				   tile_row[1] + ',t' +
+	         				   tile_row[2] + ',t' +
+	         				   tile_row[3] + ',t' +
+	         				   tile_row[4] + ',t' +
+	         				   tile_row[5] + ',t' +
+	         				   tile_row[6] + ',t' +
+	         				   tile_row[7] + ',t' +
+	         				   tile_row[8] + ',t' +
+	         				   tile_row[9] + ']'
+	         				tile_column = 0;
+	         			}
+	         			else
+	         			{
+	         				tile_column += 1;
+	         			}
+         			} while (pointer.selectNext())
+         			
+         			pointer.selectParent();
+         		}
+         		
+         		build_str += '\n]\n]'
+         	}
+         } while (pointer.selectNext())
+      }
+      
+      return build_str;
+]]>
+    </method>
+  </class>
+  
+  <editmanager id="emanager"/>
+  
+  <!-- Interface -->
+				
+  <window id="tiledisplay" title="Tiles" width="100" height="300" resizable="true">
+    
+    <view name="tiles" width="${parent.width - 16}" height="${parent.height}">
+    <wrappinglayout axis="x" spacing="0"/>
+    
+    <method name="get_tile_idx" args="tobj">
+<![CDATA[
+      var nodes = this.subnodes;
+      var i=0;
+      for (i=2; i < nodes.length; i++)
+      {
+      	if (nodes[i] == tobj)
+      	   return i-1;
+      }
+      
+      return 0;
+]]>
+    </method>
+     
+     <view datapath="tileset:/tile" clip="true" width="32" height="32" clickable="true">
+       
+       <method event="onclick">
+<![CDATA[
+         var new_tile = tiledisplay.tiles.get_tile_idx(this);
+         if (new_tile > 0)
+         {
+         	emanager.brush = new_tile;
+         }
+]]>
+       </method>
+       
+       <view resource="tileset_img" xoffset="$path{'offset/@x'}" yoffset="$path{'offset/@y'}"/>
+       
+       
+       <text datapath="name/text()" fgcolor="#ffffff"/>
+     </view>
+     
+     </view>
+  </window>
+  
+  <window id="mapdump" width="320" height="240" x="420" resizable="true">
+    <simplelayout axis="y"/>
+    <view name="header" height="32" width="${parent.width - 22}">
+    <button>Dump
+      <method event="onclick">
+        mapdump.dumptext.setText(emanager.dump_js());
+      </method>
+    </button>
+    </view>
+    <edittext multiline="true" name="dumptext" width="${parent.width - 22}" height="${parent.height - parent.header.height - 48}" bgcolor="#000000" fgcolor="#ffffff"/>
+    
+  </window>
+  
+  <!-- Main tile view -->
+  
+  <view x="$once{tiledisplay.width}" width="320" height="320" bgcolor="#000000">
+    <wrappinglayout axis="x" spacing="0"/>
+    <view width="32" height="32" clip="true" datapath="mapdata:/tilemap/t">
+       <attribute name="tile_id" value="$path{'text()'}"/>
+       
+       <node name="tile_node" datapath="text()">
+         <attribute name="tile_id" value="0"/>
+       
+       <method name="applyData" args="data">
+<![CDATA[
+          this.tile_id = parseInt(data);
+]]>
+       </method>
+       
+       <method name="updateData">
+<![CDATA[
+         return this.tile_id;
+]]>
+       </method>
+       
+       </node>
+       
+       <method event="onmouseup">
+<![CDATA[
+         emanager.brush_active = false;
+]]>
+       </method>
+       
+       <method event="onmousedown">
+<![CDATA[
+         emanager.brush_active = true;
+          
+         this.tile_node.setAttribute('tile_id', emanager.brush);
+         this.sync();
+]]>
+       </method>
+       
+       <method event="onmouseover">
+<![CDATA[
+          Debug.write('over');
+          if (emanager.brush_active)
+          {
+             this.tile_node.setAttribute('tile_id', emanager.brush);
+             this.sync();
+          }
+]]>
+       </method>
+       
+       <method event="ondata">
+<![CDATA[
+          this.sync();
+]]>
+       </method>
+       
+       <method name="sync">
+<![CDATA[
+         var offs = emanager.get_tileoffset(this.tile_node.tile_id);
+         this.timg.setAttribute('xoffset', offs.x);
+         this.timg.setAttribute('yoffset', offs.y);
+         
+         this.datapath.updateData();
+]]>
+       </method>
+       
+      <view name="timg" resource="tileset_img" />
+    </view>
+  </view>
+
+</canvas>

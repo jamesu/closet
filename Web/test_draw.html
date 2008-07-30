@@ -1,0 +1,571 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<?xml version="1.0"?> 
+<!-- (C) 2007 Stuart J Urquhart (jamesu [at] gmail.com). All Rights Reserved. -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<style type="text/css">
+
+body
+{
+	padding: 0px;
+	margin: 0px;
+	background: #fff;
+	color: #000;
+	font-family: Arial;
+}
+
+.toolbox
+{
+	position: absolute;
+	border: 1px solid grey;
+	background: white;
+	z-index: 1;
+	width: 128px;
+}
+
+.toolbox ul
+{
+    list-style: none;
+	
+	margin-top: 0px;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+
+.toolbox ul li
+{
+	float: left;
+	border: 1px solid grey;
+	height: 32px;
+	width: 32px;
+	overflow: hidden;
+	position: relative;
+}
+
+.toolbox li a
+{
+	color: #0063DC;
+}
+
+.toolbox li a:hover
+{
+	color: #333333;
+}
+
+.toolbox img
+{
+	border: 0px;
+}
+
+
+.toolbox_bar
+{
+	color: #fff;
+	width: 100%;
+	display: block;
+	background-color: #000;
+}
+
+.toolbox fieldset
+{
+	padding: 3px;
+}
+
+.toolbox h3
+{	clear: left;
+	padding-top: 12px;
+	margin-top: 0px;
+}
+
+#mycanvas
+{
+	position: absolute;
+	left: 200px;
+	margin-top: 64px;
+	
+	border-style: dashed;
+	border-width: 1px;
+}
+
+#statusbox
+{
+	width: 256px;
+	border: 1px solid #000;
+}
+
+#pmenu
+{
+	position: fixed;
+	background: #fff;
+	z-index: 1;
+	padding: 6px;
+}
+
+#pmenu a
+{
+	margin: 6px;
+}
+
+#styleselect
+{
+	width: 90%;
+}
+
+#toolbox
+{
+	top: 32px;
+}
+
+#stylebox
+{
+	left: 860px;
+	top:  12px;
+}
+
+.s_area {	background: #ccc;	height: 20px;	width: 80%;
+	vertical-align: centre;
+	
+	padding-left: 3px;
+	padding-right: 3px;
+	margin-bottom: 3px;
+	margin-left: auto;
+	margin-right: auto;} .s_knob {	height: 20px;	width: 20px;	background: #000;}
+
+#style_col_rk {
+	background: #ff0000;
+}
+
+#style_col_gk {
+	background: #00ff00;
+}
+
+#style_col_bk {
+	background: #0000ff;
+}
+
+#lineWidth {
+	width: 64px;
+}
+
+</style>
+
+<script type="text/javascript" src="thirdparty/mootools.v1.1.js"></script>
+<script type="text/javascript" src="drawit.js"></script>
+
+<script type="text/javascript">
+//<![CDATA[
+// Darn globals!
+var myDrawIt = null;
+var draw_loop = null;
+var draw_color_sliders = Array(4);
+var draw_color_slider_mode = 0;
+var draw_color_value = [0,0,0,0];
+
+function initApp()
+{
+	myDrawIt = new DrawIt($('mycanvas'));
+	
+	// Register tools
+	myDrawIt.addEditTool('SELECT', new SelectTool($('tool_select')));
+	myDrawIt.addEditTool('ROTATE', new RotateTool($('tool_rotate')));
+	myDrawIt.addEditTool('SCALE', new ScaleTool($('tool_scale')));
+	myDrawIt.addEditTool('PBETWEEN', new PointsBetweenAction($('action_pbetween')));
+	
+	// Create test poly
+	add_test_grid();
+	
+	draw_loop = window.setInterval(redraw, 75);
+	
+	$('toolbox').makeDraggable({handle: $('toolbox_bar')});
+	$('stylebox').makeDraggable({handle: $('stylebox_bar')});
+	
+	registerDrawItEvents();
+	sync_style_list();
+}
+
+function redraw()
+{
+	myDrawIt.redraw();
+}
+
+function add_test_square()
+{
+	// Create test poly
+	var myPoly = myDrawIt.createObject(DrawItConstants.OBJ_POLY);
+	myPoly.x = 50;
+	myPoly.y = 50;
+	myPoly.points[3] = new Point(-25,25);
+	myPoly.points[2] = new Point(25,25);
+	myPoly.points[1] = new Point(25,-25);
+	myPoly.points[0] = new Point(-25,-25);
+	myPoly.closed = true;
+	
+	myDrawIt.recalculateAllBounds();
+}
+
+function add_test_grid()
+{
+	var grid_width = 5;
+	var grid_height = 5;
+	
+	for (var x=0; x<grid_width; x++)
+	{
+		for (var y=0; y<grid_height; y++)
+		{
+			var myPoly = myDrawIt.createObject(DrawItConstants.OBJ_POLY);
+			myPoly.x = 55+(x*55);
+			myPoly.y = 55+(y*55);
+			myPoly.points[3] = new Point(-25,25);
+			myPoly.points[2] = new Point(25,25);
+			myPoly.points[1] = new Point(25,-25);
+			myPoly.points[0] = new Point(-25,-25);
+			myPoly.closed = true;
+		}
+	}
+	
+	myDrawIt.recalculateAllBounds();
+}
+
+function sync_style_list()
+{
+	var styles = myDrawIt.draw_styles;
+	var myList = $('selection_style');
+	//myList.options.slice(0, myList.options.length);
+	
+	for (var i=0; i<styles.length; i++)
+	{
+		myList.options[i] = new Option("Style " + i, 'style' + i, false, false);
+	}
+}
+
+function sync_selection_info()
+{
+	if (myDrawIt.current_mode == DrawItConstants.MODE_OBJECT && myDrawIt.object_selection.length > 0)
+	{
+		var allowed_types = 254;//DrawItConstants.OBJ_GENERIC ^ DrawItConstants.OBJ_GROUP;
+		if (myDrawIt.object_selection[0].type & allowed_types)
+		{
+			var current_style = myDrawIt.draw_styles[myDrawIt.object_selection[0].style];
+			
+			$('selection_style').disabled = false;
+			$('selection_style').selectedIndex = myDrawIt.object_selection[0].style;
+			
+			$('selection_closed').disabled = false;
+			$('selection_closed').checked = myDrawIt.object_selection[0].closed;
+			
+			$('style_col_rk').style.display = 'block';
+			$('style_col_gk').style.display = 'block';
+			$('style_col_bk').style.display = 'block';
+			$('style_col_ak').style.display = 'block';
+			draw_color_value = draw_color_slider_mode == 0 ? current_style.getFill() : current_style.getStroke();
+			draw_color_sliders[0].set(draw_color_value[0]);
+			draw_color_sliders[1].set(draw_color_value[1]);
+			draw_color_sliders[2].set(draw_color_value[2]);
+			draw_color_sliders[3].set(draw_color_value[3]);
+			
+			$('lineWidth').disabled = false;
+			$('lineWidth').value = current_style.lineWidth;
+	
+			var style_form = $('style_form');
+			style_form.is_filled.disabled = false;
+			style_form.is_filled.checked = current_style.fill;
+			
+			style_form.is_stroked.disabled = false;
+			style_form.is_stroked.checked = current_style.stroke;
+			
+			for (var i=0; i<style_form.lineCap.length; i++)
+			{
+				var emt = style_form.lineCap[i];
+				if (emt.value == current_style.lineCap)
+					emt.checked = true;
+				else
+					emt.checked = false;
+				emt.disabled = false;
+			}
+			
+			for (var i=0; i<style_form.lineJoin.length; i++)
+			{
+				var emt = style_form.lineJoin[i];
+				if (emt.value == current_style.lineJoin)
+					emt.checked = true;
+				else
+					emt.checked = false;
+				emt.disabled = false;
+			}	
+			
+			return;
+		}
+	}
+	
+	// Disable everything by default
+	$('selection_style').disabled = true;
+	$('selection_closed').disabled = true;
+	
+	$('style_col_rk').style.display = 'none';
+	$('style_col_gk').style.display = 'none';
+	$('style_col_bk').style.display = 'none';
+	$('style_col_ak').style.display = 'none';
+	
+	$('lineWidth').disabled = true;
+	
+	var style_form = $('style_form');
+	style_form.is_filled.disabled = true;
+	style_form.is_stroked.disabled = true;
+	
+	for (var i=0; i<style_form.lineCap.length; i++)
+	{
+		style_form.lineCap[i].disabled = true;
+	}
+	
+	for (var i=0; i<style_form.lineJoin.length; i++)
+	{
+		style_form.lineJoin[i].disabled = true;
+	}
+}
+
+function set_selection_color()
+{
+	if (draw_color_slider_mode == 0)
+	{
+		myDrawIt.object_selection.forEach(function(object){
+			myDrawIt.draw_styles[object.style].setFill(draw_color_value[0], draw_color_value[1], draw_color_value[2], draw_color_value[3]);
+		});
+	}
+	else
+	{
+		myDrawIt.object_selection.forEach(function(object){
+			myDrawIt.draw_styles[object.style].setStroke(draw_color_value[0], draw_color_value[1], draw_color_value[2], draw_color_value[3]);
+		});
+	}
+}
+
+function registerDrawItEvents()
+{
+	var canvas = $('mycanvas');
+	
+	// Core events
+	canvas.addEvent('mousedown', function(evt){myDrawIt.inputEvent(DrawItConstants.MOUSE_DOWN, new Event(evt));});
+	canvas.addEvent('mouseup', function(evt){myDrawIt.inputEvent(DrawItConstants.MOUSE_UP, new Event(evt));});
+	canvas.addEvent('mousemove', function(evt){myDrawIt.inputEvent(DrawItConstants.MOUSE_MOVE, new Event(evt));});
+		
+	document.addEvent('keydown', function(evt){myDrawIt.inputEvent(DrawItConstants.KEY_DOWN, new Event(evt));;});
+	document.addEvent('keyup', function(evt){myDrawIt.inputEvent(DrawItConstants.KEY_UP, new Event(evt));});
+	document.addEvent('resize', function(evt){myDrawIt.root_pos = $('canvas').getPosition();});
+	
+	// GUI events
+	$('selection_style').addEvent('change', function(evt){
+		var idx = $('selection_style').selectedIndex;
+		myDrawIt.object_selection.forEach(function(object){
+			object.style = idx;
+		});
+		myDrawIt.isDirty = true;
+	});
+	
+	$('selection_closed').addEvent('change', function(evt){
+		var is_closed = $('selection_closed').checked;
+		myDrawIt.object_selection.forEach(function(object){
+			object.closed = is_closed;
+		});
+		myDrawIt.isDirty = true;
+	});
+	
+	$('style_new').addEvent('click', function(evt){
+		myDrawIt.draw_styles.push(new DrawItStyle());
+		sync_style_list();
+	});
+	
+	$('style_form').is_filled.addEvent('change', function(evt){
+		myDrawIt.draw_styles[myDrawIt.object_selection[0].style].fill = $('style_form').is_filled.checked;
+		myDrawIt.isDirty = true;
+	});
+	
+	$('style_form').is_stroked.addEvent('change', function(evt){
+		myDrawIt.draw_styles[myDrawIt.object_selection[0].style].stroke = $('style_form').is_stroked.checked;
+		myDrawIt.isDirty = true;
+	});
+	
+	$('lineCapSet').addEvent('change', function(evt){
+		var style_set = $('style_form');
+		for (var i=0; i<style_set.lineCap.length; i++)
+		{
+			var lcp = style_set.lineCap[i];
+			if (lcp.checked)
+			{
+				myDrawIt.draw_styles[myDrawIt.object_selection[0].style].lineCap = lcp.value;
+				myDrawIt.isDirty = true;
+				return;
+			}
+		}
+	});
+	
+	$('lineJoinSet').addEvent('change', function(evt){
+		var style_set = $('style_form');
+		for (var i=0; i<style_set.lineJoin.length; i++)
+		{
+			var lcp = style_set.lineJoin[i];
+			if (lcp.checked)
+			{
+				myDrawIt.draw_styles[myDrawIt.object_selection[0].style].lineJoin = lcp.value;
+				myDrawIt.isDirty = true;
+				return;
+			}
+		}
+	});
+	
+	// Sliders for RGB
+	draw_color_sliders[0] = new Slider($('style_col_r'), $('style_col_rk'), {	steps: 255,	onChange: function(step){
+		draw_color_value[0] = step;
+		set_selection_color();
+		myDrawIt.isDirty = true;	}}).set(0);
+	
+	draw_color_sliders[1] = new Slider($('style_col_g'), $('style_col_gk'), {	steps: 255,	onChange: function(step){
+		draw_color_value[1] = step;
+		set_selection_color();
+		myDrawIt.isDirty = true;	}}).set(0);
+
+	draw_color_sliders[2] = new Slider($('style_col_b'), $('style_col_bk'), {	steps: 255,	onChange: function(step){
+		draw_color_value[2] = step;
+		set_selection_color();
+		myDrawIt.isDirty = true;	}}).set(0);
+
+	draw_color_sliders[3] = new Slider($('style_col_a'), $('style_col_ak'), {	steps: 255,	onChange: function(step){
+		draw_color_value[3] = step;
+		set_selection_color();
+		myDrawIt.isDirty = true;	}}).set(0);
+	
+	// Color mode switch
+	$('rgbaModeLink').addEvent('click', function(evt){
+		if (draw_color_slider_mode == 0)
+		{
+			draw_color_slider_mode = 1;
+			sync_selection_info();
+			$('rgbaModeLink').innerHTML = "[Stroke]";
+		}
+		else
+		{
+			draw_color_slider_mode = 0;
+			sync_selection_info();
+			$('rgbaModeLink').innerHTML = "[Fill]";
+		}
+	});
+
+	$('lineWidth').addEvent('change', function(evt){
+		var value = parseFloat($('lineWidth').value);
+		if (value != NaN)
+			myDrawIt.draw_styles[myDrawIt.object_selection[0].style].lineWidth = value;
+	});
+	
+	$('saveLink').addEvent('click', function(evt){
+	});
+	
+	$('loadLink').addEvent('click', function(evt){
+	});
+	
+	// Callbacks
+	myDrawIt.onNewSelection = sync_selection_info;
+	myDrawIt.onChangeMode = function() {sync_selection_info();}
+	
+	// Tool & modifier events
+	
+	document.captureEvents(Event.KEYPRESS);
+	document.captureEvents(Event.MOUSEMOVE);
+	sync_selection_info();
+}
+//]]>
+</script>
+
+<head>
+<title>JavaScript Draw Tool (Test)</title>
+</head>
+<body onload="initApp();">
+
+<div id="pmenu"><a href="javascript:alert('N/A')" id="saveLink">[Save]</a> | <a href="javascript:alert('N/A')" id="loadLink">[Load]</a><input id="statusbox" type="textbox"/></div>
+
+<div id="toolbox" class="toolbox">
+<div id="toolbox_bar" class="toolbox_bar">Toolbox</div>
+<h3>Modes</h3>
+	<ul>
+	<li><a href="javascript:myDrawIt.setEditMode(DrawItConstants.MODE_OBJECT);"><img src="buttons/object_mode.gif" alt="Object Mode"/></a></li>
+	<li><a href="javascript:myDrawIt.setEditMode(DrawItConstants.MODE_POINT);"><img src="buttons/point_mode.gif" alt="Point Edit Mode"/></a></li>
+	<!--<li><a href="javascript:myDrawIt.setEditMode(DrawItConstants.MODE_JOINT);">Joint Edit Mode</a></li>-->
+	</ul>
+
+<h3>Tools</h3>
+	<ul>
+		<li><a href="javascript:myDrawIt.setCurrentTool('SELECT');"><img src="buttons/select_tool.gif" alt="Select"/></a></li>
+		<li><a href="javascript:myDrawIt.setCurrentTool('ROTATE');"><img src="buttons/rotate_tool.gif" alt="Rotate"/></a></li>
+		<li><a href="javascript:myDrawIt.setCurrentTool('SCALE');"><img src="buttons/scale_tool.gif" alt="Scale"/></a></li>
+	</ul>
+<!--
+<h3>Primitives</h3>
+	<ul>
+		<li><a href="javascript:set_tool(TOOL_ADDLINE);"><img src="buttons/line_tool.gif" alt="Line"/></a></li>
+		<li><a href="javascript:set_tool(TOOL_ADDBEZIER);"><img src="buttons/bezier_tool.gif" alt="Bezier"/></a></li>
+		<li><a href="javascript:set_tool(TOOL_ADDCUBICBEZIER);"><img src="buttons/cubic_beizer_tool.gif" alt="Cubic Bezier"/></a></li>
+		<li><a href="javascript:set_tool(TOOL_ADDPOLY);"><img src="buttons/polygon_tool.gif" alt="Polygon"/></a></li>
+		<li><a href="javascript:set_tool(TOOL_ADDSHAPE);"><img src="buttons/shape_tool.gif" alt="Shape"/></a></li>
+		<li><a href="javascript:set_tool(TOOL_MAGIC, MAGIC_CIRCLE);"><img src="buttons/circle_tool.gif" alt="Circle"/></a></li>
+		<li><a href="javascript:set_tool(TOOL_MAGIC, MAGIC_RECT);"><img src="buttons/rectangle.gif" alt="Rectangle"/></a></li>
+	</ul>
+-->
+<h3>Actions</h3>
+	<ul>
+	<li><a href="javascript:myDrawIt.groupSelected();"><img src="buttons/group_action.gif" alt="Group objects"/></a></li>
+	<li><a href="javascript:myDrawIt.destroySelected();"><img src="buttons/destroy_action.gif" alt="Destroy objects"/></a></li>
+	<li><a href="javascript:add_test_square();"><img src="buttons/test.gif" alt="Add test square"/></a></li>
+	<li><a href="javascript:myDrawIt.setCurrentTool('PBETWEEN');"><img src="buttons/points_between_action.gif" alt="Add points between selection"/></a></li>
+	<li><a href="javascript:myDrawIt.deltaSelectedPriority(1);"><img src="buttons/increase_pri_action.gif" alt="Increase priority"/></a></li>
+	<li><a href="javascript:myDrawIt.deltaSelectedPriority(-1);"><img src="buttons/decrease_pri_action.gif" alt="Decrease priority"/></a></li>
+	</ul>
+</div>
+
+<div id="stylebox" class="toolbox">
+<div id="stylebox_bar" class="toolbox_bar">Selection Options</div>
+<h3>Style</h3>
+		<p>
+		<select id="selection_style" name="selection_style">
+		</select><button id="style_new">New</button>
+		</p>
+		<form id="style_form">
+		
+		<p><fieldset id="rgbaSet"><legend id="rgbaMode">Colour <a id="rgbaModeLink" href="#">[Fill]</a></legend>
+		<div id="style_col_r" class="s_area"><div id="style_col_rk" class="s_knob"></div></div>
+		<div id="style_col_g" class="s_area"><div id="style_col_gk" class="s_knob"></div></div>
+		<div id="style_col_b" class="s_area"><div id="style_col_bk" class="s_knob"></div></div>
+		<div id="style_col_a" class="s_area"><div id="style_col_ak" class="s_knob"></div></div>
+		</fieldset></p>
+		
+		<p><fieldset id="fillStrokeSet"><legend>Fill and Stroke</legend>
+		<input type="checkbox" name="is_filled">Fill</input>
+		<input type="checkbox" name="is_stroked">Stroke</input>
+		<span>Width</span><input id="lineWidth" type="textbox"/>
+		</fieldset></p>
+		
+		<p><fieldset id="lineCapSet"><legend>Line cap</legend>
+		<ul>
+		<li><input type="radio" name="lineCap" value="butt" checked="true">Butt</input></li>
+		<li><input type="radio" name="lineCap" value="round">Round</input></li>
+		<li><input type="radio" name="lineCap" value="square">Square</input></li>
+		</ul>
+		</fieldset></p>
+		<p><fieldset id="lineJoinSet"><legend>Line join</legend>
+		<ul>
+		<li><input type="radio" name="lineJoin" value="miter" checkec="true">Miter</input></li>
+		<li><input type="radio" name="lineJoin" value="round">Round</input></li>
+		<li><input type="radio" name="lineJoin" value="bevel">Bevel</input></li>
+		</ul>
+		</fieldset></p>
+		</form>
+	<h3>Object</h3>
+		<p>
+		<input type="checkbox" id="selection_closed" name="selection_closed">Closed</input>
+		</p>
+
+</div>
+
+<canvas id="mycanvas" width="640" height="480"></canvas>
+
+
+</body>
+
+</html>

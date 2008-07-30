@@ -1,0 +1,97 @@
+<HTML>
+
+<HEAD>
+<TITLE>Canvas Fonts</TITLE>
+<STYLE>
+body {
+	font-family: Tahoma;
+	font-size: 8pt;
+}
+CANVAS {
+	border: 1px solid #000;
+}
+</STYLE>
+</HEAD>
+
+<BODY>
+<P>Variable Width Canvas Fonts :: &copy; Benjamin Joffe 2006</P>
+<P>With enhancements :: &copy; James Urquhart 2007</P>
+<CANVAS id="canvas" width="500" height="500"></CANVAS>
+<SCRIPT type="text/javascript"><!--
+var arial10=new Image();
+arial10.src = "arial.png";
+arial10.c='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ 0123456789!@#$%^&*()-=[]\\;\',./_+{}|:"<>?`~';
+arial10.w=[8,8,7,8,8,5,8,8,4,4,7,4,12,8,8,8,8,5,7,4,8,7,10,7,7,7,9,9,10,10,9,8,11,10,4,7,9,8,12,10,11,9,11,10,9,9,10,9,13,9,9,9,4,8,8,8,8,8,8,8,8,8,8,4,14,8,8,12,7,9,6,5,5,5,8,4,4,4,4,3,4,4,4,8,8,5,5,4,4,5,8,8,8,5,8];
+arial10.h=16;
+arial10.s=14;
+
+var cool_align = 0;
+
+// CanvasRenderingContext2D
+//CanvasRenderingContext2D.prototype.drawString=function(s, f, x, y){
+function cool_drawString(s, f, x, y){
+	y=Math.round(y);
+	var z=x=Math.round(x),t,i,j;
+	if(!f.f)
+		cool_drawStringInit(f);
+	s=s.split(''),i=0,j=s.length;
+	while(i<j)
+		if((t=f.c.indexOf(s[i++]))>=0)
+			this.drawImage(f,f.f[t],0,f.w[t],f.height,x,y,f.w[t],f.height),x+=f.w[t];
+		else if(s[i-1]=='\n')
+			x=z,y+=f.h;
+}
+
+function cool_drawStringInit(f)
+{
+	var i,j,t;
+	f.f=[t=0],i=0,j=f.w.length;
+	while(++i<j)
+		f.f[i]= t+= f.s;
+}
+
+function cool_drawStringCalcBounds(s, f)
+{
+	var z=0,x=0,t,i,j,max_x=0,x=0,y=0;
+	x=y=0;
+	if(!f.f)
+		cool_drawStringInit(f);
+	s=s.split(''),i=0,j=s.length;
+	while(i<j)
+		if((t=f.c.indexOf(s[i++]))>=0)
+		{
+			x+=f.w[t];
+		}
+		else if(s[i-1]=='\n')
+		{
+			max_x = x > max_x ? x : max_x;
+			x=z,y+=f.h;
+		}
+		
+	max_x = x > max_x ? x : max_x;
+			
+	return {
+		'x':0,
+		'y':0,
+		'w':max_x,
+		'h':y+f.h
+	};
+}
+
+
+window.onload=function(){
+	var ctx=document.getElementById('canvas').getContext('2d');
+	ctx.drawString = cool_drawString;
+	ctx.calcDrawStringBounds = cool_drawStringCalcBounds;
+	ctx.strokeStyle='rgba(0,0,0,1.0)';
+	ctx.drawString('This here is an example of canvas \ntext: Tahoma 8pt. It would be easy \nto add as many fonts as you like. \n\n0123456789!@#$%^&*()-=[]\\;\',./_+{}|:"<>?`~', arial10,  20, 50);
+	var bounds = ctx.calcDrawStringBounds('I also took the liberty to create Georgia 10pt \nfor your use, head over to the link provided \nabove to make all the fonts you like. \n\n0123456789!@#$%^&*()-=[]\\;\',./_+{}|:"<>?`~', arial10);
+	ctx.drawString('Arial 10!', arial10,  120, 250);
+	ctx.strokeRect(20,150,bounds.w,bounds.h);
+	ctx.drawString('I also took the liberty to create Georgia 10pt \nfor your use, head over to the link provided \nabove to make all the fonts you like. \n\n0123456789!@#$%^&*()-=[]\\;\',./_+{}|:"<>?`~', arial10,  20, 150);
+}
+
+//--></SCRIPT>
+</BODY>
+
+</HTML>

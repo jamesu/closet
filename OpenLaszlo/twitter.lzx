@@ -1,0 +1,50 @@
+<!-- // Copyright (C) 2007, James S Urquhart (jamesu at gmail.com). All Rights Reserved. -->
+<canvas>
+  <dataset name="dset" ondata="header.throbber.setText('');" type="http" src="http://twitter.com/statuses/public_timeline.xml">
+  </dataset>
+  
+  <simplelayout axis="y"/>
+
+  <!-- Header -->
+
+  <view name="header" width="${parent.width}" bgcolor="#CCCCCC">
+  <button>Update
+  <handler name="onclick">
+  parent.throbber.setText("Updating...");
+  dset.doRequest();
+  </handler>
+  </button>
+  
+  <text name="throbber" x="${parent.width - this.width}">
+  </text>
+  </view>
+
+  <!-- Scrollbar container -->
+
+  <view width="${parent.width}" height="${parent.height-header.height}" clip="true">
+  <scrollbar name="scroller" axis="y"/>
+
+  <view width="${parent.width-parent.scroller.width}" clip="true">
+
+  <!-- Data replication container -->
+
+  <simplelayout axis="y"/>
+
+  <view datapath="dset:/statuses/status" visible="false">
+    <simplelayout axis="x"/>
+    <image datapath="user/profile_image_url/text()">
+      <method event="onload">
+      parent.setOpacity(0);
+      parent.setVisible(true);
+      parent.animate("opacity", 1, 1000, false);
+      </method>
+    </image>
+    <text datapath="user/name/text()" fontstyle="bold"/>
+    <text> - </text>
+    <text datapath="text/text()" fgcolor="#AAAAAA"/>
+  </view>
+  </view>
+
+  </view>
+
+</canvas>
