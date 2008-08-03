@@ -4,6 +4,7 @@ Base.exe is a program that converts numbers to and from any base, the default be
 In addition, there is also support converting to and from numerals, the default being roman numerals (e.g. I=1, V=5, L=50, C=100).
 
 Usage : Base: (-numerals, -table <file>) [to|from] <number>
+
 E.g.  :
 <pre>
 	base from Tea
@@ -23,7 +24,7 @@ In the default mode, the file will contain a list of symbols. The number of symb
 In the numerals mode, the file will contain lines, of the format:
 
 <pre>
-	<numeral>=<value>
+	&lt;numeral&gt;=&lt;value&gt;
 </pre>
 
 e.g.:
