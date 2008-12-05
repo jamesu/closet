@@ -1,0 +1,46 @@
+#!/bin/sh
+
+# Check lighttpd launcher
+if [ ! -e /etc/init.d/lighttpd ]
+then
+	# Copy over and register init script we already prepared
+	cp /home/user/server/scripts/lighttpd /etc/init.d/
+fi
+
+# Check log directories
+if [ ! -e /var/log/lighttpd ]
+then
+	mkdir /var/log/lighttpd
+	chown -R root:root /var/log/lighttpd
+fi
+
+if [ -e /tmp/deploy-lighttpd ]
+then
+	# Lets stop everything first
+	/etc/init.d/lighttpd stop
+	
+	# Copy configuration back
+	cp /home/user/server/config/lighttpd.conf $ROOT_PREFIX/conf/
+	
+	# Do a swap-around
+	mv  $ROOT_PREFIX /usr/old-lighttpd
+	mv /tmp/deploy-lighttpd $ROOT_PREFIX
+	rm -rf /usr/old-lighttpd
+	
+	# Setup the permissions
+	chown -R root:root  $ROOT_PREFIX
+	chmod 755 $ROOT_PREFIX
+	chmod 755 $ROOT_PREFIX/bin
+	chmod 755 $ROOT_PREFIX/conf
+	chmod 511 $ROOT_PREFIX/sbin
+	#chmod 755 $ROOT_PREFIX/logs # preferrably a-r
+	# Assuming httpd is root:root
+	chmod 511 $ROOT_PREFIX/sbin/lighttpd
+	
+	# Start everything back up again
+	/etc/init.d/lighttpd start
+else
+	echo "No deployment directory present. Cannot deploy!"
+	exit 1
+fi
+	

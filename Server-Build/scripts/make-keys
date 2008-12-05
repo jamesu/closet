@@ -1,0 +1,8 @@
+#!/bin/sh
+OUTDIR=~/server/keys
+
+openssl genrsa -des3 -out ${OUTDIR}/server.key 1024
+openssl rsa -in ${OUTDIR}/server.key -pubout
+openssl req -new -nodes -in ${OUTDIR}/server.key -out ${OUTDIR}/server.csr
+openssl x509 -req -days 30 -in ${OUTDIR}/server.csr -signkey ${OUTDIR}/server.key -out ${OUTDIR}/server.crt
+

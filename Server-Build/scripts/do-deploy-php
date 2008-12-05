@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# Check eaccelerator tmp
+if [ ! -e /tmp/eaccelerator ]
+then
+	mkdir /tmp/eaccelerator
+	chown httpd:httpd /tmp/eaccelerator
+	chmod 0777 /tmp/eaccelerator
+fi
+
+if [ -e /tmp/deploy-php ]
+then
+	# Do a swap-around
+	mv  $ROOT_PREFIX /usr/old-php
+	mv /tmp/deploy-php $ROOT_PREFIX
+	rm -rf /usr/old-php
+	
+	# Copy configuration back
+	cp /home/user/server/config/php.ini $ROOT_PREFIX/lib/
+	
+	# Setup the permissions
+	chown -R root:root  $ROOT_PREFIX
+	# Assuming php is root:root
+	chmod 511 $ROOT_PREFIX/bin/php
+	
+	# Restart apache
+	#/etc/init.d/httpd restart
+else
+	echo "No deployment directory present. Cannot deploy!"
+	exit 1
+fi

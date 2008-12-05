@@ -1,0 +1,40 @@
+#!/bin/sh
+CONFDIR=~/server/config
+
+# Copy across configuration files
+if [ -e $ROOT_PREFIX/apache2/conf/ ]
+then
+	cp ${CONFDIR}/httpd.conf $ROOT_PREFIX/apache2/conf/
+fi
+
+if [ -e $ROOT_PREFIX/lighttpd/conf/ ]
+then
+	cp ${CONFDIR}/lighttpd.conf $ROOT_PREFIX/lighttpd/conf/
+fi
+
+if [ -e  $ROOT_PREFIX/php/lib/ ]
+then
+	cp ${CONFDIR}/php.ini  $ROOT_PREFIX/php/lib/
+fi
+
+# Copy across ssl keys
+if [ -e $ROOT_PREFIX/apache2/conf/keys/ ]
+then
+	cp ~/server/keys/* $ROOT_PREFIX/apache2/conf/keys/
+fi
+
+if [ -e $ROOT_PREFIX/lighttpd/conf/keys/ ]
+then
+	cp ~/server/keys/* $ROOT_PREFIX/lighttpd/conf/keys/
+fi
+
+# Instruct server to reload config
+if [ -e  $ROOT_PREFIX/apache2/ ]
+then
+	/etc/init.d/httpd reload
+fi
+
+if [ -e  $ROOT_PREFIX/lighttpd ]
+then
+	/etc/init.d/lighttpd reload
+fi
