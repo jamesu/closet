@@ -7,7 +7,7 @@ put them up for all of the world to see. Beware though, some of
 this stuff could very well be some of my worst code yet. 
 
 Subject material is pretty much random. There are things written in 
-C, C++, Python, Ruby, JavaScript, and even LZX.
+C, C++, Python, Ruby, JavaScript, haXe, and even LZX.
 
 It is debatable whether or not you may find any use for this code. If 
 you do, and you need some favourable licensing conditions, feel free 
